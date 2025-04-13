@@ -1,60 +1,59 @@
 import pytest
+import sys
+import os
 
-from smells2 import Nose
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from smells2 import HumanNose, RobotNose  # updated import
 
 ROSE = "rose"
 DAISY = "daisy"
 TULIP = "tulip"
 
-
 def test_human_nose_can_smell():
-    n = Nose()
+    n = HumanNose()
     n.smell(ROSE)
     assert ROSE in n.get_smelled_smells()
-
 
 def test_robot_nose_can_smell():
-    n = Nose([], True)
+    n = RobotNose()
     n.smell(ROSE)
     assert ROSE in n.get_smelled_smells()
 
-
 def test_human_nose_has_allergies():
-    n = Nose([ROSE])
-    # Test that we can smell a non-allergy odor
+    n = HumanNose([ROSE])
+
+    # Can smell non-allergy odor
     n.smell(TULIP)
     assert TULIP in n.get_smelled_smells()
 
-    # Test that we cannot smell an allergy odor
+    # Tries to smell an allergy, immune response activates
     n.smell(ROSE)
     assert ROSE not in n.get_smelled_smells()
 
-    # When the nose is having an immune response, we can't smell
+    # Immune response blocks further smelling
     with pytest.raises(RuntimeError):
         n.smell(DAISY)
 
-    # Reset the immune response
+    # Reset
     n.rest()
 
-    # Now the nose can smell another non-allergy smell
+    # Now can smell again
     n.smell(DAISY)
     assert set([DAISY, TULIP]) == n.get_smelled_smells()
 
-
 def test_robot_nose_has_air_capacity():
-    n = Nose([], True, 2)
+    n = RobotNose(air_tank_capacity_liters=2)
 
-    # Test that we can smell 2 odors with a capacity of 2
     n.smell(ROSE)
     n.smell(DAISY)
 
-    # If we try to smell with a full air tank, an error is raised
+    # Should raise error on full tank
     with pytest.raises(RuntimeError):
         n.smell(TULIP)
 
-    # Rest to reset the air capacity
+    # Reset tank
     n.rest()
 
-    # Now we can smell another smell
     n.smell(TULIP)
     assert set([ROSE, DAISY, TULIP]) == n.get_smelled_smells()
